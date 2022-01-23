@@ -24,6 +24,9 @@ class Products with ChangeNotifier {
     final url = Uri.parse(
         'https://flutter-shop-app-25ee3-default-rtdb.europe-west1.firebasedatabase.app/products.json');
     final response = await http.get(url);
+    if (json.decode(response.body) == null) {
+      return;
+    }
     final transformedData = json.decode(response.body) as Map<String, dynamic>;
     final List<Product> loadedProducts = [];
     transformedData.forEach(
@@ -49,7 +52,7 @@ class Products with ChangeNotifier {
         'https://flutter-shop-app-25ee3-default-rtdb.europe-west1.firebasedatabase.app/products.json');
 
     try {
-      final response = await http.post(
+      await http.post(
         url,
         body: json.encode(
           {
@@ -61,14 +64,7 @@ class Products with ChangeNotifier {
           },
         ),
       );
-      final newProduct = Product(
-        id: DateTime.now().toString(),
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        imageUrl: product.imageUrl,
-      );
-      _items.add(newProduct);
+
       // _items.insert(0,newProduct); Insert at the start of the list.
       notifyListeners();
     } catch (error) {
@@ -80,16 +76,43 @@ class Products with ChangeNotifier {
     return _items.firstWhere((pdItem) => pdItem.id == productId);
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
+      final url = Uri.parse(
+          'https://flutter-shop-app-25ee3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'price': newProduct.price,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {}
   }
 
-  void deleteProduct(String id) {
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.parse(
+        'https://flutter-shop-app-25ee3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    var existingProduct = _items[existingProductIndex];
     _items.removeWhere((prod) => prod.id == id);
+    await http.delete(url).then(
+      (res) {
+        if (res.statusCode >= 400) {
+          throw Exception('Something went wriong');
+        }
+        existingProduct = null as Product;
+      },
+    ).catchError(
+      (_) {
+        _items.insert(existingProductIndex, existingProduct);
+        notifyListeners();
+      },
+    );
+
     notifyListeners();
   }
 

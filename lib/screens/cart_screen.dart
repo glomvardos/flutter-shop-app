@@ -4,10 +4,16 @@ import '../providers/orders.dart';
 import '../providers/cart.dart' show Cart;
 import '../widgets/cart_item.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
-
   static const routeName = '/cart';
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  var _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -44,14 +50,25 @@ class CartScreen extends StatelessWidget {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                   TextButton(
-                      onPressed: () {
-                        Provider.of<Orders>(context, listen: false).addOrder(
-                          cartData.items.values.toList(),
-                          cartData.totalAmount,
-                        );
-                        cartData.clear();
-                      },
-                      child: const Text('ORDER NOW'))
+                      onPressed: cartData.totalAmount <= 0
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              await Provider.of<Orders>(context, listen: false)
+                                  .addOrder(
+                                cartData.items.values.toList(),
+                                cartData.totalAmount,
+                              );
+                              cartData.clear();
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            },
+                      child: _isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('ORDER NOW'))
                 ],
               ),
             ),
