@@ -25,7 +25,7 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  Future<void> fetchOrders() async {
+  Future<dynamic> fetchOrders() async {
     final url = Uri.parse(
         'https://flutter-shop-app-25ee3-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
     final response = await http.get(url);
@@ -55,8 +55,10 @@ class Orders with ChangeNotifier {
         );
       },
     );
+
     _orders = loadedOrders.reversed.toList();
     notifyListeners();
+    return _orders;
   }
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
