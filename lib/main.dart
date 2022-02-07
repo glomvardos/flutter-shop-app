@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import './providers/auth.dart';
 import './screens/auth_screen.dart';
 import './screens/edit_product_screen.dart';
 import './screens/user_products_screen.dart';
@@ -21,33 +22,39 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => Products(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => Cart(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => Orders(),
-        )
-      ],
-      child: MaterialApp(
-        title: 'MyShop',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch()
-              .copyWith(primary: Colors.purple, secondary: Colors.deepOrange),
-          fontFamily: 'Lato',
-        ),
-        routes: {
-          '/': (_) => const AuthScreen(),
-          ProductDetailScreen.routeName: (_) => const ProductDetailScreen(),
-          CartScreen.routeName: (_) => const CartScreen(),
-          OrdersScreen.routeName: (_) => const OrdersScreen(),
-          UserProductsScreen.routeName: (_) => const UserProductsScreen(),
-          EditProductScreen.routeName: (_) => const EditProductScreen(),
-        },
-      ),
-    );
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) => Products(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => Cart(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => Orders(),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => Auth(),
+          )
+        ],
+        child: Consumer<Auth>(
+          builder: (ctx, auth, _) => MaterialApp(
+            title: 'MyShop',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSwatch().copyWith(
+                  primary: Colors.purple, secondary: Colors.deepOrange),
+              fontFamily: 'Lato',
+            ),
+            home: auth.isAuth
+                ? const ProductsOverviewScreen()
+                : const AuthScreen(),
+            routes: {
+              ProductDetailScreen.routeName: (_) => const ProductDetailScreen(),
+              CartScreen.routeName: (_) => const CartScreen(),
+              OrdersScreen.routeName: (_) => const OrdersScreen(),
+              UserProductsScreen.routeName: (_) => const UserProductsScreen(),
+              EditProductScreen.routeName: (_) => const EditProductScreen(),
+            },
+          ),
+        ));
   }
 }
