@@ -42,7 +42,6 @@ class Product with ChangeNotifier {
       isFavorite = oldStatus;
       notifyListeners();
     }
-
     notifyListeners();
   }
 }
